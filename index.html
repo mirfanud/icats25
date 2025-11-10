@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ICATS Answer Keys</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f8f9fa;
+    padding: 2rem;
+    color: #333;
+  }
+
+  h1, h2 {
+    text-align: center;
+  }
+
+  /* Layout for each question */
+.quiz-columns {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}  .question {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .question strong {
+    width: 30px;
+    text-align: right;
+    margin-right: 10px;
+  }
+
+  /* Align options horizontally */
+  .options {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Circular option buttons */
+  .option-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: 2px solid #007bff;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    user-select: none;
+    transition: all 0.2s ease;
+    color: #007bff;
+    background: #fff;
+    font-size: 15px;
+  }
+
+  /* Hide the radio inputs */
+  .option-label input {
+    display: none;
+  }
+
+  /* Selected (filled blue) */
+  .option-label.selected {
+    background: #007bff;
+    color: #ffffff;
+    border-color: #0056b3;
+  }
+
+  /* Correct answer (green) */
+  .correct {
+    background: #28a745 !important;
+    color: #ffffff !important;
+    border-color: #1e7e34 !important;
+  }
+
+  /* Incorrect answer (red) */
+  .incorrect {
+    background: #dc3545 !important;
+    color: #ffffff !important;
+    border-color: #b02a37 !important;
+  }
+
+  /* Buttons */
+  button {
+    background: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 10px 0;
+    font-size: 16px;
+  }
+
+  button:hover {
+    background: #0056b3;
+  }
+
+  /* Score display box */
+  #scoreBox {
+    background: #e9f7ef;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    font-weight: bold;
+    color: #155724;
+  }
+
+  /* Year links styling */
+  #yearLinks {
+    margin: 8px 0 16px 0;
+  }
+
+  #yearLinks a {
+    margin-right: 12px;
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  #yearLinks a:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+<h1>ICATS Answer Keys</h1>
+<hr>
+
+<label for="yearSelect"><b>Select Year:</b></label>
+<select id="yearSelect" onchange="generateQuiz()">
+  <option value="">-- Choose Year --</option>
+</select>
+<br><br>
+
+<div id="yearLinks" style="margin:8px 0;"></div>
+<br>
+<div id="quizContainer"></div>
+
+<button onclick="calculateScore()">✅ Submit Test</button>
+
+<div id="scoreBox"></div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function() {
+    loadAnswerKeys(); // Automatically runs when the page is loaded
+});
+
+
+let answerKeys = {}; // global variable to store all keys
+
+function loadAnswerKeys() {
+    // Hardcoded answer key text
+    const answerText = `
+2025 = B,D,B,C,B,B,A,B,B,C,B,C,B,A,B,A,C,C,A,C,A,B,A,B,D
+2024 = B,C,C,A,C,C,B,C,C,B,C,D,C,C,B,B,D,B,C,C,D,C,C,C,C
+2023 = A,D,D,C,A,A,B,D,B,C,C,D,B,B,A,C,A,C,B,A,A,C,C,B,A
+2022 = D,B,C,B,A,A,B,B,A,A,A,D,A,A,C,B,B,C,B,C,B,C,B,A,B
+2021 = 
+2020 = A,C,D,A,B,C,C,B,B,D,A,C,A,B,A,A,D,B,D,A,D,B,C,B,A
+2019 = C,C,C,B,C,C,B,A,B,A,D,B,D,C,C,B,C,C,C,B,C,B,C,B,C
+2018 = C,B,B,B,C,C,D,A,A,D,A,B,B,C,B,A,D,D,A,A,A,D,A,C,D
+2017 = D,B,D,A,A,A,C,B,B,C,C,B,C,B,A,A,D,B,D,B,D,B,C,C,D
+`;
+
+    // Parse the text
+    answerKeys = {}; // reset
+    answerText.trim().split("\n").forEach(line => {
+        const [year, answers] = line.split("=");
+        if (year && answers) {
+            answerKeys[year.trim()] = answers.split(",").map(a => a.trim());
+        }
+    });
+
+    console.log(answerKeys); // debug
+
+    // Populate the dropdown
+    const yearSelect = document.getElementById('yearSelect');
+    yearSelect.innerHTML = '<option value="">-- Choose Year --</option>';
+    Object.keys(answerKeys).forEach(year => {
+        yearSelect.innerHTML += `<option value="${year}">${year}</option>`;
+    });
+
+    // Clear any previous quiz or score
+    document.getElementById('quizContainer').innerHTML = "";
+    document.getElementById('scoreBox').innerHTML = "";
+    updateYearLinks("");
+    //alert("✅ Answer keys loaded successfully!");
+}
+
+function updateYearLinks(year) {
+  const linkDiv = document.getElementById('yearLinks');
+  if (!year) {
+    linkDiv.innerHTML = "";
+    return;
+  }
+  // create links pointing to YEARp.pdf and YEARk.pdf in same directory
+  const preview = `${year}p.pdf`;
+  const key = `${year}k.pdf`;
+  // Open in new tab
+  linkDiv.innerHTML = `<a href="${preview}" target="_blank">${preview}</a>
+                       <a href="${key}" target="_blank">${key}</a>`;
+}
+
+// Generate 30 questions with circular options
+function generateQuiz() {
+  const year = document.getElementById('yearSelect').value;
+  const quizDiv = document.getElementById('quizContainer');
+
+    updateYearLinks(year);
+
+  if (!year || !answerKeys[year]) {
+    quizDiv.innerHTML = "<p>Please select a valid year.</p>"; return;
+  }
+
+let html = '<div class="quiz-columns">';
+
+// Create three column wrappers
+html += '<div class="col">';
+for (let i = 1; i <= 10; i++) {
+  html += `
+    <div class="question" id="q${i}">
+      <strong>${i}.</strong>
+      <div class="options">
+        ${["A","B","C","D"].map(opt => `
+          <label class="option-label" id="q${i}_${opt}">
+            <input type="radio" name="q${i}" value="${opt}" onclick="selectOption(${i}, '${opt}')"> ${opt}
+          </label>`).join('')}
+      </div>
+    </div>`;
+}
+html += '</div>'; // end col 1
+
+html += '<div class="col">';
+for (let i = 11; i <= 20; i++) {
+  html += `
+    <div class="question" id="q${i}">
+      <strong>${i}.</strong>
+      <div class="options">
+        ${["A","B","C","D"].map(opt => `
+          <label class="option-label" id="q${i}_${opt}">
+            <input type="radio" name="q${i}" value="${opt}" onclick="selectOption(${i}, '${opt}')"> ${opt}
+          </label>`).join('')}
+      </div>
+    </div>`;
+}
+html += '</div>'; // end col 2
+
+html += '<div class="col">';
+for (let i = 21; i <= 25; i++) {
+  html += `
+    <div class="question" id="q${i}">
+      <strong>${i}.</strong>
+      <div class="options">
+        ${["A","B","C","D"].map(opt => `
+          <label class="option-label" id="q${i}_${opt}">
+            <input type="radio" name="q${i}" value="${opt}" onclick="selectOption(${i}, '${opt}')"> ${opt}
+          </label>`).join('')}
+      </div>
+    </div>`;
+}
+html += '</div>'; // end col 3
+
+html += '</div>'; // end .quiz-columns
+
+quizDiv.innerHTML = html;
+document.getElementById('scoreBox').innerHTML = "";
+}
+
+// Fill selected option with blue
+function selectOption(qNum, opt) {
+  ["A","B","C","D"].forEach(o => {
+    const lbl = document.getElementById(`q${qNum}_${o}`);
+    lbl.classList.remove("selected");
+  });
+  document.getElementById(`q${qNum}_${opt}`).classList.add("selected");
+}
+
+// Calculate score with colored feedback
+function calculateScore() {
+  const year = document.getElementById('yearSelect').value;
+  if (!year || !answerKeys[year]) { alert("⚠️ Select a valid year."); return; }
+  const key = answerKeys[year];
+
+  let correct = 0, incorrect = 0, unanswered = 0;
+  let score = 0;
+  for (let i=1; i<=25; i++) {
+    const qDiv = document.getElementById(`q${i}`);
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    qDiv.querySelectorAll(".option-label").forEach(lbl => lbl.classList.remove("correct","incorrect"));
+
+    if (!selected) {
+      unanswered++;
+    } else if (selected.value === key[i-1]) {
+      correct++;
+      score += 3;
+      selected.parentElement.classList.add("correct");
+    } else {
+      incorrect++;
+      score += -1;
+      selected.parentElement.classList.add("incorrect");
+      // highlight correct answer
+      const correctLabel = document.getElementById(`q${i}_${key[i-1]}`);
+      correctLabel.classList.add("correct");
+    }
+  }
+
+  document.getElementById('scoreBox').innerHTML = `
+    ✅ Correct: ${correct}<br>
+    ❌ Incorrect: ${incorrect}<br>
+    ⚪ Unanswered: ${unanswered}<br>
+    <hr><b>Total Score: ${score} / 75</b>
+  `;
+}
+</script>
+</body>
+</html>
+
